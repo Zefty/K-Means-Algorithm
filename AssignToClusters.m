@@ -22,22 +22,27 @@ function [clusterNum] = AssignToClusters(imageData,rgbOfKMeans)
 %
 % Author: Jaime Wu
 
-% Calculates the number of k means there are 
-kMeans = size(rgbOfKMeans,1);
+% % Calculates the number of k means there are 
+% kMeans = size(rgbOfKMeans,1);
+% d = zeros(size(imageData,1),size(imageData,2),kMeans(1));
+% 
+% for k = 1:kMeans(1)
+%     d(:,:,k) = sum((imageData(:,:,:) - rgbOfKMeans(k,1,:)).^2,3);
+% end
+% 
+% % Finding the minimum squared distance tells us which k mean (cluster) each
+% % pixel belongs to 
+% [~,clusterNum] = min(d,[],3);
+k = size(rgbOfKMeans,1);
+rowsOfImage = size(imageData,1);
+distanceSquared = zeros(size(imageData,1)*size(imageData,2),k);
 
-% Creating cell arrays to calculate each of the k means simultaneously
-cellsOfKMeans = num2cell(rgbOfKMeans,3);
-cellsOfImageData(1:kMeans,1) = {imageData};
-
-% Calculating the squared distance between each cell 
-formula = @(image,kMean) sum((image-kMean).^2,3);
-d = cellfun(formula,cellsOfImageData,cellsOfKMeans,'UniformOutput',false);
-
-% Concatenating the 2D arrays in each cell to form a 3D array, with each
-% layer representing the squared distance of a k mean
-d = cat(3, d{:});
-
-% Finding the minimum squared distance tells us which k mean (cluster) each
-% pixel belongs to 
-[~,clusterNum] = min(d,[],3);
+rgbOfKMeans = reshape(rgbOfKMeans,[],3);
+imageData = reshape(imageData,[],3);
+for kMean = 1:k
+    distanceSquared(:,kMean) = (imageData(:,1) - rgbOfKMeans(kMean,1)).^2 + (imageData(:,2) - rgbOfKMeans(kMean,2)).^2 + (imageData(:,3) - rgbOfKMeans(kMean,3)).^2;
+end
+[~,clusterNum] = min(distanceSquared,[],2);
+clusterNum = reshape(clusterNum,rowsOfImage,[]);
 return
+
